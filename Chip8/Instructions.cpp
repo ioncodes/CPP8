@@ -2,7 +2,7 @@
 
 Instructions::Instruction Instructions::getInstruction(unsigned int opcode) const
 {
-	auto instruction = instructions.find(opcode);	
+	auto instruction = instructions.find(opcode);
 	if (instruction != instructions.end())
 		return instruction->second;
 	return InstructionUnknown;

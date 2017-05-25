@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 	chip8.LoadRom(argv[1]);
 
 	sf::RenderWindow window(sf::VideoMode(1024, 512), "Chip8");
-	
+
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -24,12 +24,12 @@ int main(int argc, char* argv[])
 
 		std::vector<sf::Sprite> sprites;
 
-		unsigned int map[64][32] = { 1 };
+		unsigned int map[64][32] = {1};
 		int j = 0;
 		int k = 0;
-		for(int i = 0; i < 2048; i++)
+		for (int i = 0; i < 2048; i++)
 		{
-			if(chip8.screen().at(i) == 0x00000000)
+			if (chip8.screen().at(i) == 0x00000000)
 			{
 				map[k][j] = 0;
 			}
@@ -49,13 +49,13 @@ int main(int argc, char* argv[])
 		}
 		for (int x = 0; x < 64; x++)
 		{
-			for(int y = 0; y < 32; y++)
+			for (int y = 0; y < 32; y++)
 			{
 				sf::Texture texture;
 				texture.create(16, 16);
 				sf::Sprite sprite(texture);
 				sprite.setPosition(x * 16, y * 16);
-				if(map[x][y] == 1)
+				if (map[x][y] == 1)
 				{
 					sprite.setColor(sf::Color::White);
 				}
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 			}
 		}
 		window.clear();
-		for(int i = 0; i < sprites.size(); i++)
+		for (int i = 0; i < sprites.size(); i++)
 		{
 			window.draw(sprites.at(i));
 		}

@@ -82,7 +82,7 @@ void Chip8::Cycle()
 			break;
 		case Instructions::InstructionUnknown:
 			std::cout << "Opcode not found: " << std::hex << (m_opcode & 0x000F) << std::endl;
-		default: 
+		default:
 			std::cout << "Unknown Error" << std::endl;
 		}
 	}
@@ -248,7 +248,7 @@ void Chip8::Cycle()
 		case Instructions::InstructionUnknown:
 			std::cout << "Opcode not found: " << std::hex << (m_opcode & 0xF000) << std::endl;
 		default:
-			std::cout << "Unknown Error" << std::endl;; ;
+			std::cout << "Unknown Error" << std::endl;;;
 		}
 	}
 }
