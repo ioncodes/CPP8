@@ -115,4 +115,3 @@ public:
 	Key getKey(unsigned int opcode) const;
 	FX getFX(unsigned int opcode) const;
 };
-

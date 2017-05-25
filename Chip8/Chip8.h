@@ -48,4 +48,6 @@ public:
 	void Cycle();
 	const std::array<unsigned int, SCREEN_SIZE>& screen() const { return m_screen; }
 	~Chip8();
+
+	friend class CPU;
 };
