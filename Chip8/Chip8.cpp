@@ -68,7 +68,6 @@ void Chip8::LoadRom(const char* file_path)
 void Chip8::Cycle()
 {
 	m_opcode = m_memory.at(m_programCounter) << 8 | m_memory.at(m_programCounter + 1);
-
 	if (m_opcode & 0xF000 == 0x0000)
 	{
 		switch (m_instructions.getInstruction(m_opcode & 0x000F))
