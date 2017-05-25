@@ -46,7 +46,34 @@ public:
 	void LoadFontSet();
 	void LoadRom(const char* file_path);
 	void Cycle();
-	const std::array<unsigned int, SCREEN_SIZE>& screen() const { return m_screen; }
+
+	std::array<std::array<unsigned int, 32>, 64> screen() const
+	{
+		std::array<std::array<unsigned int, 32>, 64> map = { 1 };
+		int j = 0;
+		int k = 0;
+		for (int i = 0; i < 2048; i++)
+		{
+			if (m_screen.at(i) == 0x00000000)
+			{
+				map[k][j] = 0;
+			}
+			else
+			{
+				map[k][j] = 1;
+			}
+			if (k == 63)
+			{
+				j++;
+				k = 0;
+			}
+			else
+			{
+				k++;
+			}
+		}
+		return map;
+	}
 	~Chip8();
 
 	friend class CPU;

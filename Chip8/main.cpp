@@ -24,29 +24,6 @@ int main(int argc, char* argv[])
 
 		std::vector<sf::Sprite> sprites;
 
-		unsigned int map[64][32] = {1};
-		int j = 0;
-		int k = 0;
-		for (int i = 0; i < 2048; i++)
-		{
-			if (chip8.screen().at(i) == 0x00000000)
-			{
-				map[k][j] = 0;
-			}
-			else
-			{
-				map[k][j] = 1;
-			}
-			if (k == 63)
-			{
-				j++;
-				k = 0;
-			}
-			else
-			{
-				k++;
-			}
-		}
 		for (int x = 0; x < 64; x++)
 		{
 			for (int y = 0; y < 32; y++)
@@ -55,7 +32,7 @@ int main(int argc, char* argv[])
 				texture.create(16, 16);
 				sf::Sprite sprite(texture);
 				sprite.setPosition(x * 16, y * 16);
-				if (map[x][y] == 1)
+				if (chip8.screen()[x][y] == 1)
 				{
 					sprite.setColor(sf::Color::White);
 				}
