@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "CPU.h"
 
 Chip8::Chip8()
 {
@@ -73,14 +74,11 @@ void Chip8::Cycle()
 		switch (m_instructions.getInstruction(m_opcode & 0x000F))
 		{
 		case Instructions::Clear:
-			m_screen = {0};
-			m_programCounter += 2;
+			CPU::ClearScreen(*this);
 			break;
 
 		case Instructions::ReturnToSubroutine:
-			--m_stackPointer;
-			m_programCounter = m_stack[m_stackPointer];
-			m_programCounter += 2;
+			CPU::ReturnToSubroutine(*this);
 			break;
 		case Instructions::InstructionUnknown:
 			std::cout << "Opcode not found: " << std::hex << (m_opcode & 0x000F) << std::endl;
@@ -93,106 +91,70 @@ void Chip8::Cycle()
 		switch (m_instructions.getInstruction(m_opcode & 0xF000))
 		{
 		case Instructions::JumpToAddress:
-			m_programCounter = m_opcode & 0x0FFF;
+			CPU::JumpToAddress(*this);
 			break;
 
 		case Instructions::CallSubroutine:
-			m_stack[m_stackPointer] = m_programCounter;
-			++m_stackPointer;
-			m_programCounter = m_opcode & 0x0FFF;
+			CPU::CallSubroutine(*this);
 			break;
 
 		case Instructions::SkipInstructionIfVirtualEqualsNN:
-			if (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] == (m_opcode & 0x00FF))
-				m_programCounter += 4;
-			else
-				m_programCounter += 2;
+			CPU::SkipInstructionIfVirtualEqualsNN(*this);
 			break;
 
 		case Instructions::SkipInstructionIfVirtualEqualsNotNN:
-			if (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] != (m_opcode & 0x00FF))
-				m_programCounter += 4;
-			else
-				m_programCounter += 2;
+			CPU::SkipInstructionIfVirtualEqualsNotNN(*this);
 			break;
 
 		case Instructions::SkipInstructionIfVirtualEqualsVirtual:
-			if (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] == m_virtualRegisters[(m_opcode & 0x00F0) >> 4])
-				m_programCounter += 4;
-			else
-				m_programCounter += 2;
+			CPU::SkipInstructionIfVirtualEqualsVirtual(*this);
 			break;
 
 		case Instructions::SetVirtualToNN:
-			m_virtualRegisters[(m_opcode & 0x0F00) >> 8] = m_opcode & 0x00FF;
-			m_programCounter += 2;
+			CPU::SetVirtualToNN(*this);
 			break;
 
 		case Instructions::AddNNToVirtual:
-			m_virtualRegisters[(m_opcode & 0x0F00) >> 8] += m_opcode & 0x00FF;
-			m_programCounter += 2;
+			CPU::AddNNToVirtual(*this);
 			break;
 
 		case Instructions::Virtuals:
 			switch (m_instructions.getVirtual(m_opcode & 0x000F))
 			{
 			case Instructions::SetVirtualToVirtual:
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] = m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				m_programCounter += 2;
+				CPU::SetVirtualToVirtual(*this);
 				break;
 
 			case Instructions::SetVirtualToVirtualOR:
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] |= m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				m_programCounter += 2;
+				CPU::SetVirtualToVirtualOR(*this);
 				break;
 
 			case Instructions::SetVirtualToVirtualAND:
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] &= m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				m_programCounter += 2;
+				CPU::SetVirtualToVirtualAND(*this);
 				break;
 
 			case Instructions::SetVirtualToVirtualXOR:
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] ^= m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				m_programCounter += 2;
+				CPU::SetVirtualToVirtualXOR(*this);
 				break;
 
 			case Instructions::AddVirtualToVirtual:
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] += m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				if (m_virtualRegisters[(m_opcode & 0x00F0) >> 4] > (0xFF - m_virtualRegisters[(m_opcode & 0x0F00) >> 8]))
-					m_virtualRegisters[0xF] = 1;
-				else
-					m_virtualRegisters[0xF] = 0;
-				m_programCounter += 2;
+				CPU::AddVirtualToVirtual(*this);
 				break;
 
 			case Instructions::SubVirtualFromVirtual:
-				if (m_virtualRegisters[(m_opcode & 0x00F0) >> 4] > m_virtualRegisters[(m_opcode & 0x0F00) >> 8])
-					m_virtualRegisters[0xF] = 0;
-				else
-					m_virtualRegisters[0xF] = 1;
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] -= m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				m_programCounter += 2;
+				CPU::SubVirtualFromVirtual(*this);
 				break;
 
 			case Instructions::ShiftVirtualRight:
-				m_virtualRegisters[0xF] = m_virtualRegisters[(m_opcode & 0x0F00) >> 8] & 0x1;
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] >>= 1;
-				m_programCounter += 2;
+				CPU::ShiftVirtualRight(*this);
 				break;
 
 			case Instructions::SetVirtualToVirtualMinus:
-				if (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] > m_virtualRegisters[(m_opcode & 0x00F0) >> 4])
-					m_virtualRegisters[0xF] = 0;
-				else
-					m_virtualRegisters[0xF] = 1;
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] = m_virtualRegisters[(m_opcode & 0x00F0) >> 4] - m_virtualRegisters[(m_opcode & 0x0F00) >> 8];
-				m_programCounter += 2;
+				CPU::SetVirtualToVirtualMinus(*this);
 				break;
 
 			case Instructions::ShiftVirtualLeft:
-				m_virtualRegisters[0xF] = m_virtualRegisters[(m_opcode & 0x0F00) >> 8] >> 7;
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] <<= 1;
-				m_programCounter += 2;
+				CPU::ShiftVirtualLeft(*this);
 				break;
 			case Instructions::VirtualUnknown:
 				std::cout << "Opcode not found: " << std::hex << (m_opcode & 0x000F) << std::endl;
@@ -202,51 +164,22 @@ void Chip8::Cycle()
 			break;
 
 		case Instructions::SkipInstructionIfVirtualEqualsNotVirtual:
-			if (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] != m_virtualRegisters[(m_opcode & 0x00F0) >> 4])
-				m_programCounter += 4;
-			else
-				m_programCounter += 2;
+			CPU::SkipInstructionIfVirtualEqualsNotVirtual(*this);
 			break;
 
 		case Instructions::SetIndexRegisterToNNN:
-			m_indexRegister = m_opcode & 0x0FFF;
-			m_programCounter += 2;
+			CPU::SetIndexRegisterToNNN(*this);
 			break;
 
 		case Instructions::JumpToAddressPlusV0:
-			m_programCounter = (m_opcode & 0x0FFF) + m_virtualRegisters[0];
-			break;
+			CPU::JumpToAddressPlusV0(*this);
 
 		case Instructions::SetVirtualToRandom:
-			m_virtualRegisters[(m_opcode & 0x0F00) >> 8] = (rand() % (0xFF + 1)) & (m_opcode & 0x00FF);
-			m_programCounter += 2;
+			CPU::SetVirtualToRandom(*this);
 			break;
 
 		case Instructions::DrawSprite:
-			{
-				unsigned short x = m_virtualRegisters[(m_opcode & 0x0F00) >> 8];
-				unsigned short y = m_virtualRegisters[(m_opcode & 0x00F0) >> 4];
-				unsigned short height = m_opcode & 0x000F;
-
-				m_virtualRegisters[0xF] = 0;
-				for (int yline = 0; yline < height; yline++)
-				{
-					unsigned short pixel = m_memory[m_indexRegister + yline];
-					for (int xline = 0; xline < 8; xline++)
-					{
-						if ((pixel & (0x80 >> xline)) != 0)
-						{
-							if (m_screen[(x + xline + ((y + yline) * 64))] == 1)
-							{
-								m_virtualRegisters[0xF] = 1;
-							}
-							m_screen[x + xline + ((y + yline) * 64)] ^= 1;
-						}
-					}
-				}
-
-				m_programCounter += 2;
-			}
+			CPU::DrawSprite(*this);
 			break;
 
 		case Instructions::Keys:
@@ -254,17 +187,11 @@ void Chip8::Cycle()
 			switch (m_instructions.getKey(m_opcode & 0x00FF))
 			{
 			case Instructions::SkipIfPressed:
-				if (m_keypad[m_virtualRegisters[(m_opcode & 0x0F00) >> 8]] != 0)
-					m_programCounter += 4;
-				else
-					m_programCounter += 2;
+				CPU::SkipIfPressed(*this);
 				break;
 
 			case Instructions::SkipIfNotPressed:
-				if (m_keypad[m_virtualRegisters[(m_opcode & 0x0F00) >> 8]] == 0)
-					m_programCounter += 4;
-				else
-					m_programCounter += 2;
+				CPU::SkipIfNotPressed(*this);
 				break;
 
 			case Instructions::KeyUnknown:
@@ -278,75 +205,39 @@ void Chip8::Cycle()
 			switch (m_instructions.getFX(m_opcode & 0x00FF))
 			{
 			case Instructions::SetVirtualToDelayTimer:
-				m_virtualRegisters[(m_opcode & 0x0F00) >> 8] = m_delayTimer;
-				m_programCounter += 2;
+				CPU::SetVirtualToDelayTimer(*this);
 				break;
 
 			case Instructions::WaitForKeyAndStore:
-				{
-					bool key_pressed = false;
-
-					for (int i = 0; i < 16; ++i)
-					{
-						if (m_keypad[i] != 0)
-						{
-							m_virtualRegisters[(m_opcode & 0x0F00) >> 8] = i;
-							key_pressed = true;
-						}
-					}
-
-					if (!key_pressed)
-						return;
-
-					m_programCounter += 2;
-				}
+				CPU::WaitForKeyAndStore(*this);
 				break;
 
 			case Instructions::SetDelayTimerToVirtual:
-				m_delayTimer = m_virtualRegisters[(m_opcode & 0x0F00) >> 8];
-				m_programCounter += 2;
+				CPU::SetDelayTimerToVirtual(*this);
 				break;
 
 			case Instructions::SetSoundTimerToVirtual:
-				m_soundTimer = m_virtualRegisters[(m_opcode & 0x0F00) >> 8];
-				m_programCounter += 2;
+				CPU::SetSoundTimerToVirtual(*this);
 				break;
 
 			case Instructions::AddVirtualToIndex:
-				if (m_indexRegister + m_virtualRegisters[(m_opcode & 0x0F00) >> 8] > 0xFFF)
-					m_virtualRegisters[0xF] = 1;
-				else
-					m_virtualRegisters[0xF] = 0;
-				m_indexRegister += m_virtualRegisters[(m_opcode & 0x0F00) >> 8];
-				m_programCounter += 2;
+				CPU::AddVirtualToIndex(*this);
 				break;
 
 			case Instructions::SetIndexRegisterToVirtualSprite:
-				m_indexRegister = m_virtualRegisters[(m_opcode & 0x0F00) >> 8] * 0x5;
-				m_programCounter += 2;
+				CPU::SetIndexRegisterToVirtualSprite(*this);
 				break;
 
 			case Instructions::Decimals:
-				m_memory[m_indexRegister] = m_virtualRegisters[(m_opcode & 0x0F00) >> 8] / 100;
-				m_memory[m_indexRegister + 1] = (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] / 10) % 10;
-				m_memory[m_indexRegister + 2] = (m_virtualRegisters[(m_opcode & 0x0F00) >> 8] % 100) % 10;
-				m_programCounter += 2;
+				CPU::Decimals(*this);
 				break;
 
 			case Instructions::StoreVirtualToMemory1:
-				for (int i = 0; i <= ((m_opcode & 0x0F00) >> 8); ++i)
-					m_memory[m_indexRegister + i] = m_virtualRegisters[i];
-
-				m_indexRegister += ((m_opcode & 0x0F00) >> 8) + 1;
-				m_programCounter += 2;
+				CPU::StoreVirtualToMemory1(*this);
 				break;
 
 			case Instructions::StoreVirtualToMemory2:
-				for (int i = 0; i <= ((m_opcode & 0x0F00) >> 8); ++i)
-					m_virtualRegisters[i] = m_memory[m_indexRegister + i];
-
-				m_indexRegister += ((m_opcode & 0x0F00) >> 8) + 1;
-				m_programCounter += 2;
+				CPU::StoreVirtualToMemory2(*this);
 				break;
 			case Instructions::UnknownFX:
 				std::cout << "Opcode not found: " << std::hex << (m_opcode & 0x00FF) << std::endl;
