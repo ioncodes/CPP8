@@ -169,16 +169,43 @@ void CPU::DrawSprite(Chip8& chip8)
 		{
 			if ((pixel & (0x80 >> xline)) != 0)
 			{
-				if (chip8.m_screen[(x + xline + ((y + yline) * 64))] == 1)
+				int i = (x + xline + (y + yline) * 64) + 1;
+				int* coords = to2D(i);
+				if (chip8.m_screen[coords[0]][coords[1]] == 1)
 				{
 					chip8.m_virtualRegisters[0xF] = 1;
 				}
-				chip8.m_screen[x + xline + ((y + yline) * 64)] ^= 1;
+				chip8.m_screen[coords[0]][coords[1]] ^= 1;
 			}
 		}
 	}
 
 	chip8.m_programCounter += 2;
+}
+
+int* CPU::to2D(int i)
+{
+	int r = -1;
+	int d = i % 64;
+	if (d == 0)
+		r = i;
+	else
+	{
+		r = 64 - d + i;
+	}
+	int y1 = r / 64;
+	int x1 = -1;
+	if (i < 64)
+		x1 = i;
+	else
+	{
+		x1 = d;
+		if (x1 == 0)
+			x1 = 64;
+	}
+	y1--;
+	x1--;
+	return new int[2] {x1, y1};
 }
 
 void CPU::SkipIfPressed(Chip8& chip8)

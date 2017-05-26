@@ -18,7 +18,7 @@ class Chip8
 	std::array<unsigned int, GLOBAL_SIZE> m_virtualRegisters = { 0x000 }; // Virtual Registers -> V[x]; 16 registers
 	std::array<unsigned int, GLOBAL_SIZE> m_keypad = {0x000}; // The keypad
 	std::array<unsigned int, GLOBAL_SIZE> m_stack = {0x000}; // 16bit Stack
-	std::array<unsigned int, SCREEN_SIZE> m_screen = {0x000}; // The screen
+	std::array<std::array<unsigned int, 32>, 64> m_screen = {0x000}; // The screen
 	Instructions m_instructions; // Instructions
 	const std::array<unsigned char, FONT_SIZE> FONT_SET = // The fontset
 	{
@@ -46,33 +46,9 @@ public:
 	void LoadFontSet();
 	void LoadRom(const char* file_path);
 	void Cycle();
-
-	std::array<std::array<unsigned int, 32>, 64> screen() const
+	const std::array<std::array<unsigned int, 32>, 64>& screen() const
 	{
-		std::array<std::array<unsigned int, 32>, 64> map = { 1 };
-		int j = 0;
-		int k = 0;
-		for (int i = 0; i < 2048; i++)
-		{
-			if (m_screen.at(i) == 0x00000000)
-			{
-				map[k][j] = 0;
-			}
-			else
-			{
-				map[k][j] = 1;
-			}
-			if (k == 63)
-			{
-				j++;
-				k = 0;
-			}
-			else
-			{
-				k++;
-			}
-		}
-		return map;
+		return m_screen;
 	}
 	~Chip8();
 

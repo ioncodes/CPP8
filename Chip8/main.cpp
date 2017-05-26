@@ -3,6 +3,7 @@
 #include "Chip8.h"
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 int main(int argc, char* argv[])
 {
@@ -28,28 +29,24 @@ int main(int argc, char* argv[])
 		{
 			for (int y = 0; y < 32; y++)
 			{
-				sf::Texture texture;
-				texture.create(16, 16);
-				sf::Sprite sprite(texture);
-				sprite.setPosition(x * 16, y * 16);
 				if (chip8.screen()[x][y] == 1)
 				{
+					sf::Texture texture;
+					texture.create(16, 16);
+					sf::Sprite sprite(texture);
+					sprite.setPosition(x * 16, y * 16);
 					sprite.setColor(sf::Color::White);
+					sprites.push_back(sprite);
 				}
-				else
-				{
-					sprite.setColor(sf::Color::Black);
-				}
-				sprites.push_back(sprite);
 			}
 		}
-		window.clear();
+		window.clear(sf::Color::Black);
 		for (int i = 0; i < sprites.size(); i++)
 		{
 			window.draw(sprites.at(i));
 		}
 		window.display();
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::microseconds(1200));
 	}
 
 

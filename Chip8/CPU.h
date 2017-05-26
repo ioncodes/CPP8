@@ -27,6 +27,7 @@ public:
 	static void JumpToAddressPlusV0(Chip8& chip8);
 	static void SetVirtualToRandom(Chip8& chip8);
 	static void DrawSprite(Chip8& chip8);
+	static int* to2D(int i);
 	static void SkipIfPressed(Chip8& chip8);
 	static void SkipIfNotPressed(Chip8& chip8);
 	static void SetVirtualToDelayTimer(Chip8& chip8);
